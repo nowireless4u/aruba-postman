@@ -1,0 +1,20 @@
+hostname %_sys_hostname%
+module 1 type jl320a
+flexible-module A type JL083A
+no cwmp enable
+include-credentials
+password manager user-name admin sha1 "7e3b6d1d28535b54884b86a78704538fb3496b88"
+snmp-server community "public"
+snmpv3 engineid "00:00:00:0b:00:00:04:09:73:ac:5f:40"
+oobm
+   ip address dhcp-bootp
+   ipv6 enable
+   ipv6 address dhcp full
+   exit
+vlan 1
+   name "DEFAULT_VLAN"
+   untagged 1-24,A1-A4
+   ip address dhcp-bootp
+   ipv6 enable
+   ipv6 address dhcp full
+   exit

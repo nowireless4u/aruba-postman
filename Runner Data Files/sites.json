@@ -1,0 +1,42 @@
+[
+ {
+    "site_name": "Aruba Networks HQ",
+    "site_address": "6280 America Center Dr",
+    "site_city": "San Jose",
+    "site_state": "California",
+    "site_zipcode": "95002",
+    "site_country": "United States"
+ },
+ {
+    "site_name": "HP Garage",
+    "site_address": "367 Addison Ave",
+    "site_city": "Palo Alto",
+    "site_state": "California",
+    "site_zipcode": "94301",
+    "site_country": "United States"
+ },
+ {
+   "site_name": "Aruba Networks NY",
+   "site_address": "461 Fifth Avenue, 8th Floor",
+   "site_city": "New York City",
+   "site_state": "New York",
+   "site_zipcode": "10017",
+   "site_country": "United States"
+ },
+ {
+   "site_name": "HPE HQ",
+   "site_address": "11445 Compaq Center Drive West",
+   "site_city": "Houston",
+   "site_state": "Texas",
+   "site_zipcode": "77070",
+   "site_country": "United States"
+ },
+ {
+   "site_name": "HPE Roseville",
+   "site_address": "8000 Foothills Boulevard",
+   "site_city": "Roseville",
+   "site_state": "California",
+   "site_zipcode": "95747",
+   "site_country": "United States"
+ }
+]

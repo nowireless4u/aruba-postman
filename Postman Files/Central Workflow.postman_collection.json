@@ -1,0 +1,2029 @@
+{
+	"info": {
+		"_postman_id": "3013ca03-abb0-49c2-9947-33a4fab5aed6",
+		"name": "Central Workflow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication Runner",
+			"item": [
+				{
+					"name": "Central Authentication",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"tests[\"Starting Central authentication\"] = responseCode.code === 200;",
+									"",
+									"var csrft_full = postman.getResponseCookie(\"csrftoken\").value;",
+									"",
+									"var csrft_cookie = csrft_full.substr(6);",
+									"",
+									"tests[\"CSRF Cookie Detected\"] = csrft_cookie;",
+									"",
+									"var ses_cookie = postman.getResponseCookie(\"session\").value;",
+									"",
+									"tests[\"Session Detected\"] = ses_cookie;",
+									"",
+									"pm.environment.set(\"csrf\", csrft_cookie);",
+									"console.log(\"CSRF token is:\", csrft_cookie);",
+									"pm.environment.set(\"ses\", ses_cookie);",
+									"console.log(\"Session Cookie is:\", ses_cookie);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "https://{{url}}/oauth2/authorize/central/api/login?client_id={{clientid}}",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth2",
+								"authorize",
+								"central",
+								"api",
+								"login"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{clientid}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Central Authorization Code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"tests[\"Auth Code Generation\"] = responseCode.code === 200;",
+									"var authCode = JSON.parse(responseBody);",
+									"console.log(\"Auth code is:\", authCode.auth_code);",
+									"",
+									"postman.setEnvironmentVariable(\"authcode\", authCode.auth_code);",
+									"",
+									"tests[\"Auth Code Detected\"] = authCode.auth_code;"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-CSRF-TOKEN",
+								"value": "##{{csrf}}"
+							},
+							{
+								"key": "Cookie",
+								"value": "\"session={{ses}}\""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"customer_id\" : \"{{customerid}}\"\r\n}"
+						},
+						"url": {
+							"raw": "https://{{url}}/oauth2/authorize/central/api?client_id={{clientid}}&response_type=code&scope=all",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth2",
+								"authorize",
+								"central",
+								"api"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{clientid}}"
+								},
+								{
+									"key": "response_type",
+									"value": "code"
+								},
+								{
+									"key": "scope",
+									"value": "all"
+								}
+							]
+						},
+						"description": "Valid for 5 minutes!"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Central Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"tests[\"Access Token Generation\"] = responseCode.code === 200;",
+									"var accessToken = JSON.parse(responseBody);",
+									"",
+									"console.log(\"This Access Token expires in two hours:\", accessToken.access_token);",
+									"postman.setEnvironmentVariable(\"accesstoken\", accessToken.access_token);",
+									"console.log(\"Refresh Token is:\", accessToken.refresh_token);",
+									"postman.setEnvironmentVariable(\"refreshtoken\", accessToken.refresh_token);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/oauth2/token?client_id={{clientid}}&client_secret={{clientsecret}}&grant_type=authorization_code&code={{authcode}}",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth2",
+								"token"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{clientid}}"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{clientsecret}}"
+								},
+								{
+									"key": "grant_type",
+									"value": "authorization_code"
+								},
+								{
+									"key": "code",
+									"value": "{{authcode}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"tests[\"Refreshing Access and Refresh Tokens\"] = responseCode.code === 200;",
+									"var accessToken = JSON.parse(responseBody);",
+									"",
+									"postman.setEnvironmentVariable(\"accesstoken\", accessToken.access_token);",
+									"postman.setEnvironmentVariable(\"refreshtoken\", accessToken.refresh_token);",
+									"",
+									"console.log(\"This Access Token expires in two hours:\", accessToken.access_token);",
+									"console.log(\"Refresh Token is:\", accessToken.refresh_token);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/oauth2/token?client_id={{clientid}}&grant_type=refresh_token&refresh_token={{refreshtoken}}&client_secret={{clientsecret}}",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"oauth2",
+								"token"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{clientid}}"
+								},
+								{
+									"key": "grant_type",
+									"value": "refresh_token"
+								},
+								{
+									"key": "refresh_token",
+									"value": "{{refreshtoken}}"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{clientsecret}}"
+								}
+							]
+						},
+						"description": "Need to put the refresh token from previous attempt."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Site Runner",
+			"item": [
+				{
+					"name": "Verify Current Sites",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200){",
+									"    pm.test(\"Request Successful\", function() {",
+									"      pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"\tvar nextRequest = \"Create New Sites\";",
+									"\tvar duplicateSite = false;",
+									"\tvar siteList = JSON.parse(responseBody).sites;",
+									"\tfor (var i = 0; i < siteList.length; i++) {",
+									"    \tif (siteList[i].site_name == pm.variables.get(\"site_name\")) {",
+									"        \tconsole.log(\"Duplicate Site Detected\");",
+									"        \tduplicateSite = true;",
+									"        };",
+									"};",
+									"\tif (duplicateSite == true){",
+									"\t\tpm.test(\"Duplicate Site \" + pm.variables.get(\"site_name\") + \" detected!\", function(){",
+									"    \tpm.expect(duplicateSite).to.eql(false);",
+									"\t});",
+									"}",
+									"\telse if (duplicateSite == false){",
+									"\t\tpm.test(\"Duplicate Site not detected\", function(){",
+									"    \tpm.expect(duplicateSite).to.eql(false);",
+									"\t});",
+									"};",
+									"if (duplicateSite == true){",
+									"     nextRequest = null",
+									"};",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);",
+									"}",
+									"else if (pm.response.code === 400){",
+									"    var groupData = pm.response.json();\t",
+									"    pm.test(groupData.description, function() {",
+									"        pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 401){",
+									"    pm.test(\"Unauthorized Access\", function() {",
+									"        pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 403){",
+									"    pm.test(\"Forbidden\", function() {",
+									"        pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 502){",
+									"    pm.test(\"Internal Server Error\", function() {",
+									"        pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 429){",
+									"    pm.test(\"Exceeded API Requests\", function() {",
+									"        pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"    });",
+									"};"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/central/v2/sites?calculate_total=true&offset=0&limit=1000",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"central",
+								"v2",
+								"sites"
+							],
+							"query": [
+								{
+									"key": "calculate_total",
+									"value": "true"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Sites",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"pm.test(\"Status code is 200\", function() {",
+									"  pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"",
+									"pm.test(\"Site Name is present\", function() {",
+									"  pm.expect(jsonData).to.have.property(\"site_name\");",
+									"});",
+									"pm.test(\"Name matches\", function() {",
+									"  pm.expect(jsonData.site_name).to.equal(pm.variables.get(\"site_name\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"site_address\": {\n        \"address\": \"{{site_address}}\",\n        \"city\": \"{{site_city}}\",\n        \"state\": \"{{site_state}}\",\n        \"country\": \"{{site_country}}\",\n        \"zipcode\": \"{{site_zipcode}}\"\n    },\n    \"site_name\": \"{{site_name}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/central/v2/sites",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"central",
+								"v2",
+								"sites"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{
+						"key": "in",
+						"value": "query",
+						"type": "string"
+					},
+					{
+						"key": "value",
+						"value": "{{accesstoken}}",
+						"type": "string"
+					},
+					{
+						"key": "key",
+						"value": "access_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Group Runner",
+			"item": [
+				{
+					"name": "Verify Current Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200){",
+									"    pm.test(\"Request Successful\", function() {",
+									"      pm.expect(pm.response.code).to.equal(200);",
+									"    });",
+									"    var nextRequest = \"Create New Groups\";",
+									"    var duplicateGroup = false;",
+									"    var groupList = JSON.parse(responseBody).data;",
+									"    for (var i = 0; i < groupList.length; i++) {",
+									"        if (groupList[i] == pm.variables.get(\"group_name\")) {",
+									"            console.log(\"Duplicate group Detected\");",
+									"            duplicateGroup = true;",
+									"            pm.test(pm.variables.get(\"group_name\") + \" Duplicate Group\", function(){",
+									"            pm.expect(duplicateGroup).to.eql(false);",
+									"            });",
+									"        };",
+									"    };",
+									"    ",
+									"    pm.test(\"Duplicate Group Status \", function(){",
+									"        pm.expect(duplicateGroup).to.eql(false);",
+									"    });",
+									"    ",
+									"    if (duplicateGroup == true){",
+									"         nextRequest = null;",
+									"         console.log(\"Duplicate Site\", pm.variables.get(\"group_name\"));",
+									"    };",
+									"    ",
+									"    if (pm.iterationData.get(\"aoss_template\") && pm.iterationData.get(\"cx_template\") && pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        pm.collectionVariables.set(\"wireless_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"        console.log(\"Wireless Template\", pm.collectionVariables.get(\"wireless_template\"));",
+									"    } ",
+									"    else if (pm.iterationData.get(\"aoss_template\") && pm.iterationData.get(\"cx_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"    } ",
+									"    else if (pm.iterationData.get(\"cx_template\") && pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        pm.collectionVariables.set(\"wireless_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"        console.log(\"Wireless Template\", pm.collectionVariables.get(\"wireless_template\"));",
+									"    } ",
+									"    else if (pm.iterationData.get(\"aoss_template\") && pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        pm.collectionVariables.set(\"wireless_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"        console.log(\"Wireless Template\", pm.collectionVariables.get(\"wireless_template\"));",
+									"    } ",
+									"    else if (pm.iterationData.get(\"aoss_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"    }",
+									"    else if (pm.iterationData.get(\"cx_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wired_template\", \"true\");",
+									"        console.log(\"Wired Template\", pm.collectionVariables.get(\"wired_template\"));",
+									"    }",
+									"    else if (pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"        pm.collectionVariables.set(\"wireless_template\", \"true\");",
+									"        console.log(\"Wireless Template\", pm.collectionVariables.get(\"wireless_template\"));",
+									"    };",
+									"    ",
+									"    console.log(nextRequest);",
+									"    postman.setNextRequest(nextRequest);",
+									"}",
+									"else if (pm.response.code === 400){",
+									"    var groupData = pm.response.json();\t",
+									"    pm.test(groupData.description, function() {",
+									"        pm.expect(pm.response.code).to.equal(200);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 401){",
+									"    pm.test(\"Unauthorized Access\", function() {",
+									"        pm.expect(pm.response.code).to.equal(401);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 403){",
+									"    pm.test(\"Forbidden\", function() {",
+									"        pm.expect(pm.response.code).to.equal(403);",
+									"    });",
+									"}",
+									"else if (pm.response.code === 502){",
+									"    pm.test(\"Internal Server Error\", function() {",
+									"        pm.expect(pm.response.code).to.equal(502);",
+									"    });",
+									"    var nextRequest = \"Verify Current Groups\";",
+									"}",
+									"else if (pm.response.code === 429){",
+									"    pm.test(\"Exceeded API Requests\", function() {",
+									"        pm.expect(pm.response.code).to.equal(429);",
+									"    });",
+									"};"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (pm.collectionVariables.get(\"wired_template\") && pm.collectionVariables.get(\"wireless_template\") == \"true\") {",
+									"\tconsole.log(\"Clearing Wired and Wireless Template flags...\");",
+									"\tpm.collectionVariables.set(\"wired_template\", \"false\"); ",
+									"\tpm.collectionVariables.set(\"wireless_template\", \"false\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"wired_template\") == \"true\") {",
+									"\tconsole.log(\"Clearing Wired Template flags...\");",
+									"\tpm.collectionVariables.set(\"wired_template\", \"false\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"wireless_template\") == \"true\") {",
+									"\tconsole.log(\"Clearing Wireless Template flags...\");",
+									"\tpm.collectionVariables.set(\"wireless_template\", \"false\"); ",
+									"};"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/configuration/v2/groups?limit=20&offset=0",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v2",
+								"groups"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Groups",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = null;",
+									"pm.test(pm.iterationData.get(\"group_name\") + \" Group Created\", function() {",
+									"  pm.expect(pm.response.code).to.equal(201);",
+									"});",
+									"",
+									"if (pm.response.code === 502){",
+									"\tnextRequest = \"Create New Groups\";",
+									"\tconsole.log(\"Bad Gateway\");",
+									"};",
+									"if (pm.iterationData.get(\"aoss_template\") == \"true\"){",
+									"\tconsole.log(\"Wired AOSS Template Group\");",
+									"    nextRequest = \"Create Wired AOSS Template\";",
+									"}",
+									"else if (pm.iterationData.get(\"cx_template\") == \"true\"){",
+									"\tconsole.log(\"CX Template Group\");",
+									"    nextRequest = \"Create Wired CX Template\";",
+									"}",
+									"else if (pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"\tconsole.log(\"WLAN Template Group\");",
+									"    nextRequest = \"Create Wireless Template\";",
+									"} ",
+									"else if (pm.iterationData.get(\"aos_version\") == \"AOS_10X\"){",
+									"\tconsole.log(\"Enable 10.x functionality\");",
+									"    nextRequest = \"Set Group 10.x\";",
+									"};",
+									"",
+									"console.log(pm.variables.get(\"group_name\"), \"Created\");",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n     \"group_attributes\": {\n          \"template_info\": {\n               \"Wired\": {{wired_template}},\n               \"Wireless\": {{wireless_template}}\n          },\n          \"group_password\": \"{{group_password}}\"\n     },\n     \"group\": \"{{group_name}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v2/groups",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v2",
+								"groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wired AOSS Template",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"setTimeout(function(){}, 1000);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = null;",
+									"pm.test(\"Wired AOS-S Template Status\", function() {",
+									"  pm.expect(pm.response.code).to.equal(201);",
+									"});",
+									"",
+									"if (pm.iterationData.get(\"cx_template\") == \"true\"){",
+									"\tconsole.log(\"CX Template Group\");",
+									"    nextRequest = \"Create Wired CX Template\";",
+									"}",
+									"else if (pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"\tconsole.log(\"WLAN Template Group\");",
+									"    nextRequest = \"Create Wireless Template\";",
+									"} ",
+									"else if (pm.iterationData.get(\"aos_version\") == \"AOS_10X\"){",
+									"\tconsole.log(\"Enable 10.x functionality\");",
+									"    nextRequest = \"Set Group 10.x\";",
+									"}; ",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "template",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/groups/:group_name/templates?name={{group_name}}-aoss&device_type=ArubaSwitch&version=ALL&model=ALL",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"groups",
+								":group_name",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "{{group_name}}-aoss"
+								},
+								{
+									"key": "device_type",
+									"value": "ArubaSwitch"
+								},
+								{
+									"key": "version",
+									"value": "ALL"
+								},
+								{
+									"key": "model",
+									"value": "ALL"
+								}
+							],
+							"variable": [
+								{
+									"key": "group_name",
+									"value": "{{group_name}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wired CX Template",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"setTimeout(function(){}, 1000);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = null;",
+									"pm.test(\"Wired CX Template Status\", function() {",
+									"  pm.expect(pm.response.code).to.equal(201);",
+									"});",
+									"",
+									"if (pm.iterationData.get(\"wlan_template\") == \"true\"){",
+									"\tconsole.log(\"WLAN Template Group\");",
+									"    nextRequest = \"Create Wireless Template\";",
+									"} ",
+									"else if (pm.iterationData.get(\"aos_version\") == \"AOS_10X\"){",
+									"\tconsole.log(\"Enable 10.x functionality\");",
+									"    nextRequest = \"Set Group 10.x\";",
+									"};",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "template",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/groups/:group_name/templates?name={{group_name}}-cx&device_type=CX&version=ALL&model=ALL",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"groups",
+								":group_name",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "{{group_name}}-cx"
+								},
+								{
+									"key": "device_type",
+									"value": "CX"
+								},
+								{
+									"key": "version",
+									"value": "ALL"
+								},
+								{
+									"key": "model",
+									"value": "ALL"
+								}
+							],
+							"variable": [
+								{
+									"key": "group_name",
+									"value": "{{group_name}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Wireless Template",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"setTimeout(function(){}, 1000);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = null;",
+									"pm.test(\"WLAN Template Status\", function() {",
+									"  pm.expect(pm.response.code).to.equal(201);",
+									"});",
+									"",
+									"if (pm.iterationData.get(\"aos_version\") == \"AOS_10X\"){",
+									"\tconsole.log(\"Enable 10.x functionality\");",
+									"    nextRequest = \"Set Group 10.x\";",
+									"} ;",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "template",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/groups/:group_name/templates?name={{group_name}}-wlan&device_type=IAP&version=ALL&model=ALL",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"groups",
+								":group_name",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "{{group_name}}-wlan"
+								},
+								{
+									"key": "device_type",
+									"value": "IAP"
+								},
+								{
+									"key": "version",
+									"value": "ALL"
+								},
+								{
+									"key": "model",
+									"value": "ALL"
+								}
+							],
+							"variable": [
+								{
+									"key": "group_name",
+									"value": "{{group_name}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Group 10.x",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"AOS 10x Capabilities Status\", function() {",
+									"  pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"setTimeout(function(){}, 3000);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"AOSVersion\": \"AOS_10X\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/groups/:group_name/properties",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"groups",
+								":group_name",
+								"properties"
+							],
+							"variable": [
+								{
+									"key": "group_name",
+									"value": "{{group_name}}",
+									"description": "Use {{group_name}} or enter Central Group Name"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{
+						"key": "in",
+						"value": "query",
+						"type": "string"
+					},
+					{
+						"key": "value",
+						"value": "{{accesstoken}}",
+						"type": "string"
+					},
+					{
+						"key": "key",
+						"value": "access_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Device Runner",
+			"item": [
+				{
+					"name": "Verify Device Exists in Central",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = \"Add Devices to Central\";",
+									"var devicePresent = false;",
+									"var deviceList = JSON.parse(responseBody).devices;",
+									"var device_run = pm.collectionVariables.get(\"device_type_run\");",
+									"",
+									"for (var i = 0; i < deviceList.length; i++) {",
+									"    if (deviceList[i].serial == pm.variables.get(\"_sys_serial\")) {",
+									"        //console.log(\"Device is present\");",
+									"        devicePresent = true;",
+									"\t\tpm.test(pm.variables.get(\"_sys_hostname\") + \" is present\", function(){",
+									"    \tpm.expect(devicePresent).to.eql(false);",
+									"\t\t});",
+									"    };",
+									"};",
+									"",
+									"",
+									"var devices = JSON.parse(responseBody).devices;",
+									"console.log(\"Total \" + pm.collectionVariables.get(\"device_type\") + \" count\");",
+									"",
+									"var deviceType = {};",
+									"for (var i2 = 0; i2 < devices.length; i2++) {",
+									"    deviceType[devices[i2].aruba_part_no] = 1 + (deviceType[devices[i2].aruba_part_no] || 0);",
+									"};",
+									"",
+									"console.log(deviceType);",
+									"",
+									"if (devicePresent == true){",
+									"\t nextRequest = \"Preprovision Devices to Group\";",
+									"\t pm.collectionVariables.set(\"device_type_run\", 1);",
+									"\t console.log(\"Device is present\", pm.variables.get(\"_sys_hostname\"));",
+									"\t console.log(device_run);",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"iap\") {",
+									"\tconsole.log(\"Checking AP Inventory\");",
+									"\tpm.collectionVariables.set(\"device_type\", \"switch\");",
+									"\tpm.collectionVariables.set(\"device_type_run\", 1+Number(device_run));",
+									"\tconsole.log(device_run);",
+									"\t//console.log(pm.collectionVariables.get(\"device_type\"));",
+									"    nextRequest = \"Verify Device Exists in Central\";",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"switch\") {",
+									"\tconsole.log(\"Checking Switch Inventory\");",
+									"\tpm.collectionVariables.set(\"device_type\", \"gateway\");",
+									"\tpm.collectionVariables.set(\"device_type_run\", 1+Number(device_run));",
+									"\tconsole.log(device_run);",
+									"\t//console.log(pm.collectionVariables.get(\"device_type\"));",
+									"    nextRequest = \"Verify Device Exists in Central\";",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"gateway\") {",
+									"\tconsole.log(\"Checking Gateway Inventory\");",
+									"\t//console.log(pm.collectionVariables.get(\"device_type\"));",
+									"\tpm.collectionVariables.set(\"device_type_run\", 1+Number(device_run));",
+									"\tconsole.log(device_run);",
+									"}",
+									"else {",
+									"\tpm.collectionVariables.set(\"device_type_run\", 1);",
+									"}",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var device_run = pm.collectionVariables.get(\"device_type_run\");",
+									"",
+									"if( !device_run) {",
+									"    pm.collectionVariables.set(\"device_type_run\", 1);",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"switch\" && device_run == 1) {",
+									"\tpm.collectionVariables.set(\"device_type\", \"iap\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"gateway\" && device_run == 1) {",
+									"\tpm.collectionVariables.set(\"device_type\", \"iap\");",
+									"};",
+									"",
+									"console.log(device_run);",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/platform/device_inventory/v1/devices?sku_type={{device_type}}",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"platform",
+								"device_inventory",
+								"v1",
+								"devices"
+							],
+							"query": [
+								{
+									"key": "sku_type",
+									"value": "{{device_type}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Devices to Central",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\n  {\n    \"mac\": \"{{_sys_lan_mac}}\",\n    \"serial\": \"{{_sys_serial}}\"\n  }\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/platform/device_inventory/v1/devices",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"platform",
+								"device_inventory",
+								"v1",
+								"devices"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Preprovision Devices to Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"group\": \"{{group_name}}\",\n  \"serials\": [\n    \"{{_sys_serial}}\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/device_management/v1/group/assign",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"device_management",
+								"v1",
+								"group",
+								"assign"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Enable Device Subscription",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200){",
+									"    pm.test(\"Request Successful\", function() {",
+									"      pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"\t});",
+									"};\t"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n     \"serials\": [\n          \"{{_sys_serial}}\"\n     ],\n     \"services\": [\n          \"{{service_subscription}}\"\n     ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/platform/licensing/v1/subscriptions/assign",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"platform",
+								"licensing",
+								"v1",
+								"subscriptions",
+								"assign"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Device is present in Group",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = \"Move Device to Group\";",
+									"var groupData = JSON.parse(responseBody);",
+									"",
+									"if (pm.response.code === 200){",
+									"pm.test(\"Request Successful\", function() {",
+									"  pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"pm.test(\"Device in correct group?\", function () {",
+									"    pm.expect(groupData.group).to.equal(pm.iterationData.get(\"group_name\"));",
+									"\tnextRequest = \"Get Site ID for Device\";",
+									"\t",
+									"});",
+									"}",
+									"else if (pm.response.code === 400){",
+									"var groupData = pm.response.json();\t",
+									"pm.test(groupData.description, function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"}",
+									"else if (pm.response.code === 401){",
+									"pm.test(\"Unauthorized Access\", function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"}",
+									"else if (pm.response.code === 403){",
+									"pm.test(\"Forbidden\", function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"}",
+									"else if (pm.response.code === 502){",
+									"pm.test(\"Internal Server Error\", function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"}",
+									"else if (pm.response.code === 429){",
+									"pm.test(\"Exceeded API Requests\", function() {",
+									"    pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"};",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/devices/:serial_number/group",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"devices",
+								":serial_number",
+								"group"
+							],
+							"variable": [
+								{
+									"key": "serial_number",
+									"value": "{{_sys_serial}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Device to Group",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Device Moved\", function() {",
+									"      pm.expect(pm.response.code).to.equal(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"group\": \"{{central_group_post}}\",\n  \"serials\": [\n    \"{{_sys_serial}}\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/devices/move",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"devices",
+								"move"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Site ID for Device",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var siteData = JSON.parse(responseBody);",
+									"var site = pm.iterationData.get(\"site_name\");",
+									"var siteName = siteData.sites.find(function(siteName) {",
+									"    return siteName.site_name === (site);",
+									"",
+									"});",
+									"var site_id = siteName.site_id;",
+									"console.log(site_id);",
+									"pm.collectionVariables.set(\"site_id\", site_id);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/central/v2/sites?calculate_total=true&offset=0&limit=1000",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"central",
+								"v2",
+								"sites"
+							],
+							"query": [
+								{
+									"key": "calculate_total",
+									"value": "true"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Move Device to Site",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (pm.collectionVariables.get(\"device_type\") == \"iap\") {",
+									"\tpm.variables.set(\"device\", \"IAP\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"switch\") {",
+									"\tpm.variables.set(\"device\", \"SWITCH\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"gateway\") {",
+									"\tpm.variables.set(\"device\", \"CONTROLLER\");",
+									"};"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Device added to Site\", function() {",
+									"      pm.expect(pm.response.code).to.equal(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n     \"device_type\": \"{{device}}\",\n     \"device_id\": \"{{_sys_serial}}\",\n     \"site_id\": {{site_id}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{url}}/central/v2/sites/associate",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"central",
+								"v2",
+								"sites",
+								"associate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Device is Online",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = \"Verify Device is present in Group\";",
+									"var deviceStatus = JSON.parse(responseBody);",
+									"var deviceOnline = \"Down\";",
+									"if (pm.response.code === 200){",
+									"pm.test(\"Request Successful\", function() {",
+									"  pm.expect(pm.response.code).to.equal(200);",
+									"});",
+									"};",
+									"pm.test(\"Device Online?\", function () {",
+									"    var deviceStatus = pm.response.json();",
+									"    pm.expect(deviceStatus.status).to.equal(\"Up\");",
+									"\tdeviceOnline = \"Up\";",
+									"});",
+									"",
+									"if (deviceOnline == \"Down\") {",
+									"\tnextRequest = \"Verify Device is Online\";",
+									"};",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (pm.collectionVariables.get(\"device_type\") == \"iap\") {",
+									"\tpm.variables.set(\"device\", \"aps\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"switch\") {",
+									"\tpm.variables.set(\"device\", \"switches\");",
+									"}",
+									"else if (pm.collectionVariables.get(\"device_type\") == \"gateway\") {",
+									"\tpm.variables.set(\"device\", \"gateways\");",
+									"};"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/monitoring/v1/:device_type/:serial_number",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"monitoring",
+								"v1",
+								":device_type",
+								":serial_number"
+							],
+							"variable": [
+								{
+									"key": "device_type",
+									"value": "{{device}}"
+								},
+								{
+									"key": "serial_number",
+									"value": "{{_sys_serial}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Device Variables",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Request Successful\", function() {",
+									"      pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {},
+						"disableCookies": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"warning": "This is a duplicate header and will be overridden by the Content-Type header generated by Postman.",
+								"key": "Content-Type",
+								"value": "multipart/form-data",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "variables",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/devices/template_variables?format=JSON",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"devices",
+								"template_variables"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "JSON"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Device Config Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var nextRequest = \"Get Device Config Status\";",
+									"var config_info = pm.response.text();",
+									"var config_status = false;",
+									"var template_status = false;",
+									"",
+									"pm.test(\"Template Error Status\",() => {",
+									"  pm.expect(config_info).to.include('\"Template_error_status\": false');",
+									"\ttemplate_status = true;\t  ",
+									"});",
+									"",
+									"pm.test(\"Config Error Status\",() => {",
+									"  pm.expect(config_info).to.include('\"Configuration_error_status\": false');",
+									"  config_status = true;",
+									"});",
+									"",
+									"if (config_status && template_status == true) {",
+									"\tnextRequest = \"Get Site ID for Device\";",
+									"}\t",
+									"else if (template_status == false) {",
+									"\tconsole.log(\"Template has errors!! Please fix the template!!\");",
+									"\tnextRequest = null;",
+									"}",
+									"else if (config_status == false) {",
+									"\tconsole.log (\"Device is not in sync!!\");",
+									"\tnextRequest = \"Get Device Config Status\";",
+									"};",
+									"",
+									"console.log(nextRequest);",
+									"postman.setNextRequest(nextRequest);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{url}}/configuration/v1/devices/:_sys_serial/config_details?details=false",
+							"protocol": "https",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"configuration",
+								"v1",
+								"devices",
+								":_sys_serial",
+								"config_details"
+							],
+							"query": [
+								{
+									"key": "details",
+									"value": "false"
+								}
+							],
+							"variable": [
+								{
+									"key": "_sys_serial",
+									"value": "{{_sys_serial}}",
+									"description": "Use {{_sys_serial}} or enter device serial number."
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{
+						"key": "in",
+						"value": "query",
+						"type": "string"
+					},
+					{
+						"key": "value",
+						"value": "{{accesstoken}}",
+						"type": "string"
+					},
+					{
+						"key": "key",
+						"value": "access_token",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "site_id",
+			"value": ""
+		},
+		{
+			"key": "wired_template",
+			"value": "false"
+		},
+		{
+			"key": "wireless_template",
+			"value": "false"
+		},
+		{
+			"key": "device_type",
+			"value": "iap"
+		},
+		{
+			"key": "device_type_run",
+			"value": "1"
+		}
+	]
+}

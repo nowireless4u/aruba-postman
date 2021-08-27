@@ -1,0 +1,54 @@
+[
+  {
+    "group_name": "SDBRANCH",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "",
+    "cx_template": "",
+    "wlan_template": ""
+  },
+  {
+    "group_name": "VPNC",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "",
+    "cx_template": "",
+    "wlan_template": "",
+    "aos_version": ""
+  },
+  {
+    "group_name": "EDGE-CX",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "",
+    "cx_template": "",
+    "aos_version": ""
+  },
+  {
+    "group_name": "EDGE",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "true",
+    "cx_template": "true",
+    "wlan_template": "true",
+    "aos_version": ""
+  },
+  {
+    "group_name": "MICROBRANCH",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "",
+    "cx_template": "",
+    "wlan_template": "",
+    "aos_version": ""
+  },
+  {
+    "group_name": "WLAN",
+    "group_password": "@Ruba123!",
+    "group_firmware": "",
+    "aoss_template": "",
+    "cx_template": "",
+    "wlan_template": "",
+    "aos_version": "AOS_10X"
+  }       
+]

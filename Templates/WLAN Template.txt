@@ -1,0 +1,73 @@
+                                                                                                                                                                       
+hash-mgmt-password                                                                                                                                                     
+hash-mgmt-user admin password hash 0034821a02435aaaf15d7e4bd510954631b66409b201e1dd830f64990f0a77d6a8c6532379                                                          
+                                                                                                                                                                       
+                                                                                                                                                                       
+                                                                                                                                                                       
+wlan access-rule default_wired_port_profile                                                                                                                            
+ index 1                                                                                                                                                               
+ rule any any match any any any permit                                                                                                                                 
+                                                                                                                                                                       
+wlan access-rule wired-SetMeUp                                                                                                                                         
+ index 2                                                                                                                                                               
+ rule masterip 0.0.0.0 match tcp 80 80 permit                                                                                                                          
+ rule masterip 0.0.0.0 match tcp 4343 4343 permit                                                                                                                      
+ rule any any match udp 67 68 permit                                                                                                                                   
+ rule any any match udp 53 53 permit                                                                                                                                   
+                                                                                                                                                                       
+wlan access-rule Test-PSK                                                                                                                                              
+ utf8                                                                                                                                                                  
+ index 3                                                                                                                                                               
+ rule any any match any any any permit                                                                                                                                 
+                                                                                                                                                                       
+wlan access-rule Test-Dot1X                                                                                                                                            
+ utf8                                                                                                                                                                  
+ index 4                                                                                                                                                               
+ rule any any match any any any permit                                                                                                                                 
+                                                                                                                                                                       
+wlan ssid-profile Test-PSK                                                                                                                                             
+ enable                                                                                                                                                                
+ index 1                                                                                                                                                               
+ type employee                                                                                                                                                         
+ essid Test-PSK                                                                                                                                                        
+ utf8                                                                                                                                                                  
+ wpa-passphrase e976bbc1afd53e3c2d238af4554fd32052b137b0e5c3b22d                                                                                                       
+ opmode wpa2-psk-aes                                                                                                                                                                                                                                                                                                
+ max-authentication-failures 0                                                                                                                                         
+ rf-band all                                                                                                                                                           
+ captive-portal disable                                                                                                                                                
+ mac-authentication                                                                                                                                                    
+ dtim-period 1                                                                                                                                                         
+ broadcast-filter arp                                                                                                                                                  
+ radius-accounting                                                                                                                                                     
+ radius-interim-accounting-interval 1                                                                                                                                  
+ g-min-tx-rate 12                                                                                                                                                      
+ a-min-tx-rate 12                                                                                                                                                      
+ blacklist                                                                                                                                                             
+ dmo-channel-utilization-threshold 90                                                                                                                                  
+ local-probe-req-thresh 0                                                                                                                                              
+ max-clients-threshold 64                                                                                                                                              
+                                                                                                                                                                       
+wlan ssid-profile Test-Dot1X                                                                                                                                           
+ enable                                                                                                                                                                
+ index 2
+ type employee                                                                                                                                                         
+ essid Test-Dot1X                                                                                                                                                      
+ utf8                                                                                                                                                                  
+ opmode wpa2-aes                                                                                                                                                                                                                                                                                                    
+ max-authentication-failures 0                                                                                                                                         
+ rf-band all                                                                                                                                                           
+ captive-portal disable                                                                                                                                                
+ dtim-period 1                                                                                                                                                         
+ broadcast-filter arp                                                                                                                                                  
+ radius-accounting                                                                                                                                                     
+ radius-interim-accounting-interval 5                                                                                                                                  
+ g-min-tx-rate 12                                                                                                                                                      
+ a-min-tx-rate 12                                                                                                                                                      
+ blacklist                                                                                                                                                             
+ dmo-channel-utilization-threshold 90                                                                                                                                  
+ local-probe-req-thresh 0                                                                                                                                              
+ max-clients-threshold 64                                                                                                                                              
+                                                                                                                                                                       
+auth-survivability cache-time-out 24                                                                                                                                                                                                                                                                                             
+                          

@@ -1,0 +1,9 @@
+{
+    "00:00:00:00:00:00": {
+        "_sys_lan_mac": "00:00:00:00:00:00", 
+        "_sys_serial": "123456789A",
+        "hostname": "AOS-SW01",
+        "flexible_module": "yes",
+        "flexible_module_type": "flexible-module A type JL000A"
+    }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "AP",
+    "group_name": "WLAN",
+    "service_subscription": "advanced_ap",
+    "site_name": "Aruba Networks HQ"
+  },
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "IAP-VPN",
+    "group_name": "MICROBRANCH",
+    "service_subscription": "foundation_ap",
+    "site_name": "Aruba Networks NY"
+  },
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "VPNC",
+    "group_name": "VPNC",
+    "service_subscription": "foundation_70xx",
+    "site_name": "HP Garage"
+  },
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "AP02",
+    "group_name": "SDBRANCH",
+    "service_subscription": "advance_90xx_sec",
+    "site_name": "Aruba Networks HQ"
+  },
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "AOS-SW01",
+    "group_name": "EDGE",
+    "service_subscription": "foundation_switch_6200",
+    "site_name": "HPE HQ"
+  },
+  {
+    "_sys_lan_mac": "00:00:00:00:00:00",
+    "_sys_serial": "123456789A",
+    "_sys_hostname": "CX-SW01",
+    "group_name": "EDGE-CX",
+    "service_subscription": "foundation_switch_6200",
+    "site_name": "HPE Roseville"
+  }
+]
